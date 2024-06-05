@@ -15,19 +15,20 @@ contract TruthChain {
     // voting_session_id => book_id => address => boolean
     mapping(uint => mapping(uint => mapping(address => bool))) votes;
     mapping(uint => Book) books;
-    uint bookCount = 1;
+    uint public bookCount = 0;
     
     mapping(uint => VotingSession) votingSessions;
     uint public votingSessionCount;
 
     // creates a new book
-    function createBook(string _title) private {
+    function createBook(string memory _title) public returns (Book memory) {
         Book memory book = Book(
             bookCount,
             _title
         );
         books[bookCount] = book;
         bookCount++;
+        return book;
     }
 
     // creates new voting session for a book 

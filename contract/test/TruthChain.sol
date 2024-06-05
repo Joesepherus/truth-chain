@@ -10,10 +10,15 @@ contract TruthChainTest is Test {
         truthChain = new TruthChain();
     }
 
-    function test_CreateBook() public view {
-        truthChain.createBook(
+    function test_CreateBook() public {
+        TruthChain.Book memory book = truthChain.createBook(
             "book 1"
         );
+
+        uint bookCount = truthChain.bookCount();
+        assertEq(bookCount, 1);
+        assertEq(book.id, 0);
+        assertEq(book.title, "book 1");
     }
 
 }
