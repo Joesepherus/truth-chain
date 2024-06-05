@@ -17,10 +17,10 @@ contract TruthChain {
         address voter;
     }
 
-    // voting_session_id   => address => boolean
-//    mapping(uint => mapping(address => bool)) votes;
-    // voting_session_id => vote
-    mapping(uint => Vote[]) public votes;
+    // voting_session_id => address => vote
+    mapping(uint => mapping(address => Vote)) public votes;
+    // voting_session_id => array of address 
+    mapping(uint => address[]) public voterAddresses;
 
     // books
     mapping(uint => Book) books;
@@ -53,13 +53,37 @@ contract TruthChain {
         return votingSession;
     }
 
-   function voteOnBook(uint _votingSessionId, bool decision) public {
+   function voteOnBook(uint _sessionId, bool decision) public {
+       Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
+       require(foundVote.voter == address(0), "You can only vote once per voting session!");
        Vote memory vote = Vote(decision, msg.sender);
-       votes[_votingSessionId].push(vote);
+       votes[_sessionId][msg.sender] = vote;
+       voterAddresses[_sessionId].push(msg.sender);
    }
-    
-   function getVotesForSession(uint _sessionId) public returns (Vote[] memory) {
-       return votes[_sessionId];
+
+   function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
+       address[] memory _voterAddresses = voterAddresses[_sessionId];
+       return _voterAddresses;
+   }
+
+   function getVotesForSession(uint _sessionId) public view returns (Vote[] memory) {
+       address[] memory _voterAddresses = voterAddresses[_sessionId];
+
+       Vote[] memory votesForSession = new Vote[](_voterAddresses.length); 
+       uint j = 0;
+       for (uint i = 0; i < _voterAddresses.length; i++) {
+           Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, _voterAddresses[i]);
+           if(foundVote.voter != address(0)){
+               votesForSession[j] = foundVote;
+               j++;
+           }
+
+       }
+       return votesForSession;
+   }
+
+   function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) public view returns (Vote memory) {
+       return votes[_sessionId][_voterAddress];
    }
 
 }

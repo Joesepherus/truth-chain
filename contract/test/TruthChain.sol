@@ -5,6 +5,7 @@ import {TruthChain} from "../src/TruthChain.sol";
 
 contract TruthChainTest is Test {
     TruthChain public truthChain;
+    address constant voterAddress1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     function setUp() public {
         truthChain = new TruthChain();
@@ -29,4 +30,54 @@ contract TruthChainTest is Test {
         assertEq(votingSession.id, 0);
     }
 
+    function test_VoteOnBook() public {
+        vm.prank(voterAddress1);
+        truthChain.voteOnBook(0, true);
+
+        address[] memory addresses = truthChain.getAddressesVotedForSession(0);
+        assertEq(addresses.length, 1);
+
+        TruthChain.Vote[] memory votes = truthChain.getVotesForSession(0);
+        uint votesCount = votes.length;
+        assertEq(votesCount, 1);
+        assertEq(votes[0].voter, voterAddress1);
+
+        uint yesVotes = 0;
+        uint noVotes = 0;
+
+        for(uint i=0; i < votesCount; i++) {
+            if(votes[i].decision == true) {
+                yesVotes++;
+            }
+            else {
+                noVotes++;
+            }
+        }
+        assertEq(yesVotes, 1);
+        assertEq(noVotes, 0);
+    }
+
+    function test_VoteOnBookTwice() public {
+        truthChain.voteOnBook(0, true);
+        vm.expectRevert("You can only vote once per voting session!");
+        truthChain.voteOnBook(0, true);
+
+        TruthChain.Vote[] memory votes = truthChain.getVotesForSession(0);
+        uint votesCount = votes.length;
+
+        uint yesVotes = 0;
+        uint noVotes = 0;
+
+        for(uint i=0; i < votesCount; i++) {
+            if(votes[i].decision == true) {
+                yesVotes++;
+            }
+            else {
+                noVotes++;
+            }
+        }
+
+        assertEq(yesVotes, 1);
+        assertEq(noVotes, 0);
+    }
 }
