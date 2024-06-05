@@ -12,11 +12,21 @@ contract TruthChain {
         Book book;
     }
 
-    // voting_session_id => book_id => address => boolean
-    mapping(uint => mapping(uint => mapping(address => bool))) votes;
+    struct Vote {
+        bool decision;
+        address voter;
+    }
+
+    // voting_session_id   => address => boolean
+//    mapping(uint => mapping(address => bool)) votes;
+    // voting_session_id => vote
+    mapping(uint => Vote[]) public votes;
+
+    // books
     mapping(uint => Book) books;
     uint public bookCount = 0;
     
+    // voting sessions
     mapping(uint => VotingSession) votingSessions;
     uint public votingSessionCount = 0;
 
@@ -42,4 +52,14 @@ contract TruthChain {
         votingSessionCount++;
         return votingSession;
     }
+
+   function voteOnBook(uint _votingSessionId, bool decision) public {
+       Vote memory vote = Vote(decision, msg.sender);
+       votes[_votingSessionId].push(vote);
+   }
+    
+   function getVotesForSession(uint _sessionId) public returns (Vote[] memory) {
+       return votes[_sessionId];
+   }
+
 }
