@@ -18,7 +18,7 @@ contract TruthChain {
     uint public bookCount = 0;
     
     mapping(uint => VotingSession) votingSessions;
-    uint public votingSessionCount;
+    uint public votingSessionCount = 0;
 
     // creates a new book
     function createBook(string memory _title) public returns (Book memory) {
@@ -32,12 +32,14 @@ contract TruthChain {
     }
 
     // creates new voting session for a book 
-    function createVotingSession(uint _id, uint _bookId) private {
+    function createVotingSession(uint _bookId) public returns (VotingSession memory) {
         Book storage book = books[_bookId];
         VotingSession memory votingSession = VotingSession(
-            _id,
+            votingSessionCount,
             book 
         );
         votingSessions[votingSessionCount] = votingSession;
+        votingSessionCount++;
+        return votingSession;
     }
 }

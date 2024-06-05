@@ -21,4 +21,12 @@ contract TruthChainTest is Test {
         assertEq(book.title, "book 1");
     }
 
+    function test_CreateVotingSession() public {
+        TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
+        
+        uint votingSessionCount = truthChain.votingSessionCount();
+        assertEq(votingSessionCount, 1);
+        assertEq(votingSession.id, 0);
+    }
+
 }
