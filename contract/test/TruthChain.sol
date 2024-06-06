@@ -10,25 +10,32 @@ contract TruthChainTest is Test {
     function setUp() public {
         truthChain = new TruthChain();
         vm.deal(voterAddress1, 100 ether);
+
+        truthChain.createBook(
+            "book 1"
+        );
+
+        truthChain.createVotingSession(0);
     }
 
     function test_CreateBook() public {
         TruthChain.Book memory book = truthChain.createBook(
-            "book 1"
+            "book 2"
         );
 
         uint bookCount = truthChain.bookCount();
-        assertEq(bookCount, 1);
-        assertEq(book.id, 0);
-        assertEq(book.title, "book 1");
+        assertEq(bookCount, 2);
+        assertEq(book.id, 1);
+        assertEq(book.title, "book 2");
    }
 
     function test_CreateVotingSession() public {
         TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
         
         uint votingSessionCount = truthChain.votingSessionCount();
-        assertEq(votingSessionCount, 1);
-        assertEq(votingSession.id, 0);
+        assertEq(votingSessionCount, 2);
+        assertEq(votingSession.id, 1);
+        assertEq(votingSession.active, true);
     }
 
     function test_VoteOnBook() public {
@@ -85,6 +92,23 @@ contract TruthChainTest is Test {
         assertEq(noVotes, 0); 
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.stakedPool, 1);
- 
+        assertEq(votingSession.active, true);
+    }
+
+    function test_endVotingSession() public {
+        truthChain.endVotingSession(0);
+
+        TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
+        assertEq(votingSession.active, false);
+    }
+
+    function test_endVotingSessionAndTryToVote() public {
+        truthChain.endVotingSession(0);
+
+        TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
+        assertEq(votingSession.active, false);
+
+        vm.expectRevert("Voting session is closed.");
+        truthChain.voteOnBook{value: 1 ether}(0, true);
     }
 }

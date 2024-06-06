@@ -11,6 +11,7 @@ contract TruthChain {
         uint id;
         Book book;
         uint stakedPool;
+        bool active;
     }
 
     struct Vote {
@@ -48,7 +49,8 @@ contract TruthChain {
         VotingSession memory votingSession = VotingSession(
             votingSessionCount,
             book,
-            0
+            0,
+            true
         );
         votingSessions[votingSessionCount] = votingSession;
         votingSessionCount++;
@@ -59,10 +61,16 @@ contract TruthChain {
        Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
        require(foundVote.voter == address(0), "You can only vote once per voting session!");
        require(msg.value == 1 ether, "You need to stake 1 ether to vote.");
+        VotingSession memory votingSession = votingSessions[_sessionId];
+       require(votingSession.active == true, "Voting session is closed.");
        Vote memory vote = Vote(decision, msg.sender);
        votes[_sessionId][msg.sender] = vote;
        voterAddresses[_sessionId].push(msg.sender);
        votingSessions[_sessionId].stakedPool += 1;
+   }
+
+   function endVotingSession(uint _sessionId) public {
+       votingSessions[_sessionId].active = false;
    }
 
    function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
