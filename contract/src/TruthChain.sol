@@ -53,9 +53,10 @@ contract TruthChain {
         return votingSession;
     }
 
-   function voteOnBook(uint _sessionId, bool decision) public {
+   function voteOnBook(uint _sessionId, bool decision) public payable {
        Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
        require(foundVote.voter == address(0), "You can only vote once per voting session!");
+       require(msg.value == 1 ether, "You need to stake 1 ether to vote.");
        Vote memory vote = Vote(decision, msg.sender);
        votes[_sessionId][msg.sender] = vote;
        voterAddresses[_sessionId].push(msg.sender);
@@ -85,5 +86,10 @@ contract TruthChain {
    function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) public view returns (Vote memory) {
        return votes[_sessionId][_voterAddress];
    }
+
+ //  function distributeCoins(uint _sessionId) public view {
+ //       TruthChain.Vote[] memory votes = truthChain.getVotesForSession(_sessionId);
+ //       
+ //  }
 
 }

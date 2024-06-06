@@ -9,6 +9,7 @@ contract TruthChainTest is Test {
 
     function setUp() public {
         truthChain = new TruthChain();
+        vm.deal(voterAddress1, 100 ether);
     }
 
     function test_CreateBook() public {
@@ -32,7 +33,7 @@ contract TruthChainTest is Test {
 
     function test_VoteOnBook() public {
         vm.prank(voterAddress1);
-        truthChain.voteOnBook(0, true);
+        truthChain.voteOnBook{value: 1 ether}(0, true);
 
         address[] memory addresses = truthChain.getAddressesVotedForSession(0);
         assertEq(addresses.length, 1);
@@ -58,9 +59,9 @@ contract TruthChainTest is Test {
     }
 
     function test_VoteOnBookTwice() public {
-        truthChain.voteOnBook(0, true);
+        truthChain.voteOnBook{value: 1 ether}(0, true);
         vm.expectRevert("You can only vote once per voting session!");
-        truthChain.voteOnBook(0, true);
+        truthChain.voteOnBook{value: 1 ether}(0, true);
 
         TruthChain.Vote[] memory votes = truthChain.getVotesForSession(0);
         uint votesCount = votes.length;
