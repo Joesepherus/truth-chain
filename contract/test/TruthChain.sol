@@ -21,7 +21,7 @@ contract TruthChainTest is Test {
         assertEq(bookCount, 1);
         assertEq(book.id, 0);
         assertEq(book.title, "book 1");
-    }
+   }
 
     function test_CreateVotingSession() public {
         TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
@@ -55,7 +55,10 @@ contract TruthChainTest is Test {
             }
         }
         assertEq(yesVotes, 1);
-        assertEq(noVotes, 0);
+        assertEq(noVotes, 0); 
+        TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
+        assertEq(votingSession.stakedPool, 1);
+ 
     }
 
     function test_VoteOnBookTwice() public {
@@ -79,6 +82,9 @@ contract TruthChainTest is Test {
         }
 
         assertEq(yesVotes, 1);
-        assertEq(noVotes, 0);
+        assertEq(noVotes, 0); 
+        TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
+        assertEq(votingSession.stakedPool, 1);
+ 
     }
 }

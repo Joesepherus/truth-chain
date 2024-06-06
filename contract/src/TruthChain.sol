@@ -10,6 +10,7 @@ contract TruthChain {
     struct VotingSession {
         uint id;
         Book book;
+        uint stakedPool;
     }
 
     struct Vote {
@@ -27,7 +28,7 @@ contract TruthChain {
     uint public bookCount = 0;
     
     // voting sessions
-    mapping(uint => VotingSession) votingSessions;
+    mapping(uint => VotingSession) public votingSessions;
     uint public votingSessionCount = 0;
 
     // creates a new book
@@ -46,7 +47,8 @@ contract TruthChain {
         Book storage book = books[_bookId];
         VotingSession memory votingSession = VotingSession(
             votingSessionCount,
-            book 
+            book,
+            0
         );
         votingSessions[votingSessionCount] = votingSession;
         votingSessionCount++;
@@ -60,6 +62,7 @@ contract TruthChain {
        Vote memory vote = Vote(decision, msg.sender);
        votes[_sessionId][msg.sender] = vote;
        voterAddresses[_sessionId].push(msg.sender);
+       votingSessions[_sessionId].stakedPool += 1;
    }
 
    function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
@@ -91,5 +94,10 @@ contract TruthChain {
  //       TruthChain.Vote[] memory votes = truthChain.getVotesForSession(_sessionId);
  //       
  //  }
+
+   function getVotingSessionById(uint _sessionId) public view returns (VotingSession memory){
+        VotingSession memory votingSession = votingSessions[_sessionId];
+        return votingSession;
+   }
 
 }
