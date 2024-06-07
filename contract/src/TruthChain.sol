@@ -12,6 +12,7 @@ contract TruthChain {
         Book book;
         uint stakedPool;
         bool active;
+        bool distributed;
     }
 
     struct Vote {
@@ -32,6 +33,17 @@ contract TruthChain {
     mapping(uint => VotingSession) public votingSessions;
     uint public votingSessionCount = 0;
 
+    uint256 public totalBalance;
+    mapping(address => uint256) public balances;
+
+    function deposit() external payable {
+        require(msg.value != 0, "invalid deposit");
+
+        // Increment record
+        totalBalance += msg.value;
+        balances[msg.sender] += msg.value;
+    }
+
     // creates a new book
     function createBook(string memory _title) public returns (Book memory) {
         Book memory book = Book(
@@ -50,7 +62,8 @@ contract TruthChain {
             votingSessionCount,
             book,
             0,
-            true
+            true,
+            false
         );
         votingSessions[votingSessionCount] = votingSession;
         votingSessionCount++;
@@ -60,13 +73,18 @@ contract TruthChain {
    function voteOnBook(uint _sessionId, bool decision) public payable {
        Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
        require(foundVote.voter == address(0), "You can only vote once per voting session!");
-       require(msg.value == 1 ether, "You need to stake 1 ether to vote.");
-        VotingSession memory votingSession = votingSessions[_sessionId];
+       require(balances[msg.sender] >= 1 ether, "You need to stake 1 ether to vote.");
+       VotingSession memory votingSession = votingSessions[_sessionId];
        require(votingSession.active == true, "Voting session is closed.");
        Vote memory vote = Vote(decision, msg.sender);
        votes[_sessionId][msg.sender] = vote;
        voterAddresses[_sessionId].push(msg.sender);
        votingSessions[_sessionId].stakedPool += 1;
+       balances[msg.sender] -= 1000000000000000000;
+   }
+
+   function getBalance(address _addr) public view returns (uint) {
+       return balances[_addr];
    }
 
    function endVotingSession(uint _sessionId) public {
@@ -98,14 +116,51 @@ contract TruthChain {
        return votes[_sessionId][_voterAddress];
    }
 
- //  function distributeCoins(uint _sessionId) public view {
- //       TruthChain.Vote[] memory votes = truthChain.getVotesForSession(_sessionId);
- //       
- //  }
-
    function getVotingSessionById(uint _sessionId) public view returns (VotingSession memory){
         VotingSession memory votingSession = votingSessions[_sessionId];
         return votingSession;
    }
+
+   function distributeCoins(uint _sessionId) public {
+        VotingSession memory votingSession = votingSessions[_sessionId];
+        require(votingSession.active == false , "Voting session is still active");
+        require(votingSession.distributed == false, "Rewards have already been distributed.");
+        TruthChain.Vote[] memory votes = getVotesForSession(_sessionId);
+             
+        uint votesCount = votes.length;
+
+        uint yesVotes = 0;
+        address[] memory yesAddresses = new address[](votesCount); 
+
+        for(uint i=0; i < votesCount; i++) {
+            if(votes[i].decision == true) {
+                yesVotes++;
+                yesAddresses[i] = votes[i].voter;
+            }
+        }
+
+        uint reward = divide(votesCount, yesVotes);
+
+        for(uint i=0; i < yesVotes; i++) {
+            balances[yesAddresses[i]] += reward;
+        }
+        votingSessions[_sessionId].distributed = true;
+   }
+
+    uint256 constant DECIMALS = 18;
+    uint256 constant DECIMAL_FACTOR = 10 ** DECIMALS;
+
+    // Function to perform the division and simulate floating-point result
+    function divide(uint256 numerator, uint256 denominator) public pure returns (uint256) {
+        require(denominator != 0, "Denominator cannot be zero");
+
+        // Scale the numerator by DECIMAL_FACTOR to maintain precision
+        uint256 scaledNumerator = numerator * DECIMAL_FACTOR;
+
+        // Perform the division
+        uint256 result = scaledNumerator / denominator;
+
+        return result;
+    }
 
 }
