@@ -36,6 +36,17 @@ contract TruthChain {
     uint256 public totalBalance;
     mapping(address => uint256) public balances;
 
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You need to be an owner for this operation.");        
+        _;
+    }
+
     function deposit() external payable {
         require(msg.value != 0, "invalid deposit");
 
@@ -45,7 +56,7 @@ contract TruthChain {
     }
 
     // creates a new book
-    function createBook(string memory _title) public returns (Book memory) {
+    function createBook(string memory _title) public onlyOwner returns (Book memory) {
         Book memory book = Book(
             bookCount,
             _title
@@ -56,7 +67,7 @@ contract TruthChain {
     }
 
     // creates new voting session for a book 
-    function createVotingSession(uint _bookId) public returns (VotingSession memory) {
+    function createVotingSession(uint _bookId) public onlyOwner returns (VotingSession memory) {
         Book storage book = books[_bookId];
         VotingSession memory votingSession = VotingSession(
             votingSessionCount,
@@ -125,21 +136,21 @@ contract TruthChain {
         VotingSession memory votingSession = votingSessions[_sessionId];
         require(votingSession.active == false , "Voting session is still active");
         require(votingSession.distributed == false, "Rewards have already been distributed.");
-        TruthChain.Vote[] memory votes = getVotesForSession(_sessionId);
+        TruthChain.Vote[] memory _votes = getVotesForSession(_sessionId);
              
-        uint votesCount = votes.length;
+        uint _votesCount = _votes.length;
 
         uint yesVotes = 0;
-        address[] memory yesAddresses = new address[](votesCount); 
+        address[] memory yesAddresses = new address[](_votesCount); 
 
-        for(uint i=0; i < votesCount; i++) {
-            if(votes[i].decision == true) {
+        for(uint i=0; i < _votesCount; i++) {
+            if(_votes[i].decision == true) {
                 yesVotes++;
-                yesAddresses[i] = votes[i].voter;
+                yesAddresses[i] = _votes[i].voter;
             }
         }
 
-        uint reward = divide(votesCount, yesVotes);
+        uint reward = divide(_votesCount, yesVotes);
 
         for(uint i=0; i < yesVotes; i++) {
             balances[yesAddresses[i]] += reward;

@@ -5,6 +5,7 @@ import {TruthChain} from "../src/TruthChain.sol";
 
 contract TruthChainTest is Test {
     TruthChain public truthChain;
+    address constant ownerAddress = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
     address constant voterAddress1 = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     address constant voterAddress2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
     address constant voterAddress3 = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
@@ -12,6 +13,7 @@ contract TruthChainTest is Test {
     address constant voterAddress5 = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
 
     function setUp() public {
+        vm.prank(ownerAddress);
         truthChain = new TruthChain();
         vm.deal(voterAddress1, 100 ether);
         vm.deal(voterAddress2, 100 ether);
@@ -19,10 +21,12 @@ contract TruthChainTest is Test {
         vm.deal(voterAddress4, 100 ether);
         vm.deal(voterAddress5, 100 ether);
 
+        vm.prank(ownerAddress);
         truthChain.createBook(
             "book 1"
         );
 
+        vm.prank(ownerAddress);
         truthChain.createVotingSession(0);
         vm.prank(voterAddress1);
         truthChain.deposit{value: 10 ether}();
@@ -38,6 +42,7 @@ contract TruthChainTest is Test {
     }
 
     function test_CreateBook() public {
+        vm.prank(ownerAddress);
         TruthChain.Book memory book = truthChain.createBook(
             "book 2"
         );
@@ -49,6 +54,7 @@ contract TruthChainTest is Test {
    }
 
     function test_CreateVotingSession() public {
+        vm.prank(ownerAddress);
         TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
         
         uint votingSessionCount = truthChain.votingSessionCount();
