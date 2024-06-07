@@ -38,6 +38,10 @@ contract TruthChain {
 
     address public owner;
 
+    mapping(address => uint256) public lockedBalances;
+
+    uint constant LOCK_NEEDED = 5000000000000000000;
+
     constructor() {
         owner = msg.sender;
     }
@@ -82,6 +86,7 @@ contract TruthChain {
     }
 
    function voteOnBook(uint _sessionId, bool decision) public payable {
+       require(lockedBalances[msg.sender] == LOCK_NEEDED, "You need to lock your coins first before voting.");
        Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
        require(foundVote.voter == address(0), "You can only vote once per voting session!");
        require(balances[msg.sender] >= 1 ether, "You need to stake 1 ether to vote.");
@@ -173,5 +178,12 @@ contract TruthChain {
 
         return result;
     }
-
+    
+    function lockCoins(uint amount) public {
+        require(balances[msg.sender] >= amount, "You need to deposit more coins.");
+        require(amount == LOCK_NEEDED, "You need to lock more coins.");
+        require(lockedBalances[msg.sender] <= LOCK_NEEDED, "You already have locked coins.");
+        lockedBalances[msg.sender] = amount;
+        balances[msg.sender] -= amount;
+    }
 }
