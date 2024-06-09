@@ -42,6 +42,10 @@ contract TruthChain {
 
     uint constant LOCK_NEEDED = 5000000000000000000;
 
+    uint constant REWARD_FROM_STASH_PERCENTAGE = 10;
+
+    address constant OWNER_ADDRESS = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
+
     constructor() {
         owner = msg.sender;
     }
@@ -156,6 +160,13 @@ contract TruthChain {
         }
 
         uint reward = divide(_votesCount, yesVotes);
+        uint rewardFromStash = multiply(reward, divide(REWARD_FROM_STASH_PERCENTAGE, 100));
+
+        if(balances[OWNER_ADDRESS] >= rewardFromStash){
+            totalBalance -= rewardFromStash;
+            balances[OWNER_ADDRESS] -= rewardFromStash;
+            reward += rewardFromStash;
+        }
 
         for(uint i=0; i < yesVotes; i++) {
             balances[yesAddresses[i]] += reward;
@@ -165,20 +176,17 @@ contract TruthChain {
 
     uint256 constant DECIMALS = 18;
     uint256 constant DECIMAL_FACTOR = 10 ** DECIMALS;
+    uint256 constant SCALE = 1e18;
 
-    // Function to perform the division and simulate floating-point result
-    function divide(uint256 numerator, uint256 denominator) public pure returns (uint256) {
-        require(denominator != 0, "Denominator cannot be zero");
-
-        // Scale the numerator by DECIMAL_FACTOR to maintain precision
-        uint256 scaledNumerator = numerator * DECIMAL_FACTOR;
-
-        // Perform the division
-        uint256 result = scaledNumerator / denominator;
-
-        return result;
+     function multiply(uint256 a, uint256 b) public pure returns (uint256) {
+        return (a * b) / SCALE;
     }
-    
+
+    function divide(uint256 a, uint256 b) public pure returns (uint256) {
+        require(b != 0, "Division by zero");
+        return (a * SCALE) / b;
+    }
+
     function lockCoins(uint amount) public {
         require(balances[msg.sender] >= amount, "You need to deposit more coins.");
         require(amount == LOCK_NEEDED, "You need to lock more coins.");

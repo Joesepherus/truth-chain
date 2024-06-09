@@ -15,6 +15,7 @@ contract TruthChainTest is Test {
     function setUp() public {
         vm.prank(ownerAddress);
         truthChain = new TruthChain();
+        vm.deal(ownerAddress, 1000 ether);
         vm.deal(voterAddress1, 100 ether);
         vm.deal(voterAddress2, 100 ether);
         vm.deal(voterAddress3, 100 ether);
@@ -28,6 +29,10 @@ contract TruthChainTest is Test {
 
         vm.prank(ownerAddress);
         truthChain.createVotingSession(0);
+
+        vm.prank(ownerAddress);
+        truthChain.deposit{value: 1000 ether}();
+
         vm.prank(voterAddress1);
         truthChain.deposit{value: 10 ether}();
         
@@ -177,11 +182,18 @@ contract TruthChainTest is Test {
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.distributed, true);
         uint balance = truthChain.getBalance(voterAddress1);
+        //                10000000000000000000 total
+        //                 5000000000000000000 lockedup
         //                 1000000000000000000 invested
-        //                  666666666666666666 reward              
+        //                 4000000000000000000 left
+        //                  833333333333333332 reward              
         // because 5/3 = 1.6666666666
-        //                10000000000000000000 + 666666666666666666
-        assertEq(balance, 5666666666666666666);
+        // and 1.6666666666 * 0.1 = 0.166666666666666
+        // and 1.666666666 + 0.1666666666666 = 1.83333333333333332
+        //                10000000000000000000 + 1833333333333333332
+        assertEq(balance, 5833333333333333332);
+        uint balance2 = truthChain.getBalance(voterAddress2);
+        assertEq(balance, 5833333333333333332);
         uint balance5 = truthChain.getBalance(voterAddress5);
         assertEq(balance5, 4000000000000000000);
     }
