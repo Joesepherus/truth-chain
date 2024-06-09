@@ -67,9 +67,11 @@ contract TruthChainTest is Test {
         uint balance = truthChain.getBalance(voterAddress1);
         assertEq(balance, 10000000000000000000);
         vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress1);
         truthChain.voteOnBook(0, true);
         uint balance2 = truthChain.getBalance(voterAddress1);
-        assertEq(balance2, 9000000000000000000);
+        assertEq(balance2, 4000000000000000000);
         address[] memory addresses = truthChain.getAddressesVotedForSession(0);
         assertEq(addresses.length, 1);
 
@@ -99,6 +101,8 @@ contract TruthChainTest is Test {
     function test_VoteOnBookTwice() public {
         uint balance = truthChain.getBalance(voterAddress1);
         assertEq(balance, 10000000000000000000);
+        vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
         vm.prank(voterAddress1);
         truthChain.voteOnBook(0, true);
         vm.prank(voterAddress1);
@@ -141,19 +145,31 @@ contract TruthChainTest is Test {
         assertEq(votingSession.active, false);
 
         vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress1);
         vm.expectRevert("Voting session is closed.");
         truthChain.voteOnBook{value: 1 ether}(0, true);
     }
 
     function test_distributeCoins() public {
         vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress1);
         truthChain.voteOnBook(0, true);
+        vm.prank(voterAddress2);
+        truthChain.lockCoins(5000000000000000000);
         vm.prank(voterAddress2);
         truthChain.voteOnBook(0, true);
         vm.prank(voterAddress3);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress3);
         truthChain.voteOnBook(0, true);
         vm.prank(voterAddress4);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress4);
         truthChain.voteOnBook(0, false);
+        vm.prank(voterAddress5);
+        truthChain.lockCoins(5000000000000000000);
         vm.prank(voterAddress5);
         truthChain.voteOnBook(0, false);
         truthChain.endVotingSession(0);
@@ -165,8 +181,8 @@ contract TruthChainTest is Test {
         //                  666666666666666666 reward              
         // because 5/3 = 1.6666666666
         //                10000000000000000000 + 666666666666666666
-        assertEq(balance, 10666666666666666666);
+        assertEq(balance, 5666666666666666666);
         uint balance5 = truthChain.getBalance(voterAddress5);
-        assertEq(balance5, 9000000000000000000);
+        assertEq(balance5, 4000000000000000000);
     }
 }
