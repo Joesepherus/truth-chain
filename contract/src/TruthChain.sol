@@ -28,7 +28,7 @@ contract TruthChain {
     // books
     mapping(uint => Book) books;
     uint public bookCount = 0;
-    
+
     // voting sessions
     mapping(uint => VotingSession) public votingSessions;
     uint public votingSessionCount = 0;
@@ -91,64 +91,73 @@ contract TruthChain {
         return votingSession;
     }
 
-   function voteOnBook(uint _sessionId, bool decision) public payable {
-       require(lockedBalances[msg.sender] == LOCK_NEEDED, "You need to lock your coins first before voting.");
-       Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
-       require(foundVote.voter == address(0), "You can only vote once per voting session!");
-       require(balances[msg.sender] >= 1 ether, "You need to stake 1 ether to vote.");
-       VotingSession memory votingSession = votingSessions[_sessionId];
-       require(votingSession.active == true, "Voting session is closed.");
-       Vote memory vote = Vote(decision, msg.sender);
-       votes[_sessionId][msg.sender] = vote;
-       voterAddresses[_sessionId].push(msg.sender);
-       votingSessions[_sessionId].stakedPool += 1;
-       balances[msg.sender] -= 1000000000000000000;
-   }
+    function voteOnBook(uint _sessionId, bool decision) public payable {
+        require(lockedBalances[msg.sender] == LOCK_NEEDED, "You need to lock your coins first before voting.");
+        Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, msg.sender);
+        require(foundVote.voter == address(0), "You can only vote once per voting session!");
+        require(balances[msg.sender] >= 1 ether, "You need to stake 1 ether to vote.");
+        VotingSession memory votingSession = votingSessions[_sessionId];
+        require(votingSession.active == true, "Voting session is closed.");
+        Vote memory vote = Vote(decision, msg.sender);
+        votes[_sessionId][msg.sender] = vote;
+        voterAddresses[_sessionId].push(msg.sender);
+        votingSessions[_sessionId].stakedPool += 1;
+        balances[msg.sender] -= 1000000000000000000;
+    }
 
-   function getBalance(address _addr) public view returns (uint) {
-       return balances[_addr];
-   }
+    function getBalance(address _addr) public view returns (uint) {
+        return balances[_addr];
+    }
 
-   function endVotingSession(uint _sessionId) public onlyOwner {
-       votingSessions[_sessionId].active = false;
-   }
+    function endVotingSession(uint _sessionId) public onlyOwner {
+        votingSessions[_sessionId].active = false;
+    }
 
-   function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
-       address[] memory _voterAddresses = voterAddresses[_sessionId];
-       return _voterAddresses;
-   }
+    function checkIfVotingSessionIsActiveAndUserIsOwner(uint _sessionId) public view {
+        VotingSession memory votingSession = getVotingSessionById(_sessionId);
+        if (votingSession.active == true) {
+            require(msg.sender == owner, "You need to be owner to run this function when the session is active.");
+        }
+    }
+        
+    function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
+        checkIfVotingSessionIsActiveAndUserIsOwner(_sessionId);
+        address[] memory _voterAddresses = voterAddresses[_sessionId];
+        return _voterAddresses;
+    }
 
-   function getVotesForSession(uint _sessionId) public view returns (Vote[] memory) {
-       address[] memory _voterAddresses = voterAddresses[_sessionId];
+    function getVotesForSession(uint _sessionId) public view returns (Vote[] memory) {
+        checkIfVotingSessionIsActiveAndUserIsOwner(_sessionId);
+        address[] memory _voterAddresses = voterAddresses[_sessionId];
 
-       Vote[] memory votesForSession = new Vote[](_voterAddresses.length); 
-       uint j = 0;
-       for (uint i = 0; i < _voterAddresses.length; i++) {
-           Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, _voterAddresses[i]);
-           if(foundVote.voter != address(0)){
-               votesForSession[j] = foundVote;
-               j++;
-           }
+        Vote[] memory votesForSession = new Vote[](_voterAddresses.length); 
+        uint j = 0;
+        for (uint i = 0; i < _voterAddresses.length; i++) {
+            Vote memory foundVote = getVoteForSessionAndVoter(_sessionId, _voterAddresses[i]);
+            if(foundVote.voter != address(0)){
+                votesForSession[j] = foundVote;
+                j++;
+            }
 
-       }
-       return votesForSession;
-   }
+        }
+        return votesForSession;
+    }
 
-   function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) private view returns (Vote memory) {
-       return votes[_sessionId][_voterAddress];
-   }
+    function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) private view returns (Vote memory) {
+        return votes[_sessionId][_voterAddress];
+    }
 
-   function getVotingSessionById(uint _sessionId) public view returns (VotingSession memory){
+    function getVotingSessionById(uint _sessionId) public view returns (VotingSession memory){
         VotingSession memory votingSession = votingSessions[_sessionId];
         return votingSession;
-   }
+    }
 
-   function distributeCoins(uint _sessionId) public onlyOwner {
+    function distributeCoins(uint _sessionId) public onlyOwner {
         VotingSession memory votingSession = votingSessions[_sessionId];
         require(votingSession.active == false , "Voting session is still active.");
         require(votingSession.distributed == false, "Rewards have already been distributed.");
         TruthChain.Vote[] memory _votes = getVotesForSession(_sessionId);
-             
+
         uint _votesCount = _votes.length;
 
         uint yesVotes = 0;
@@ -165,8 +174,7 @@ contract TruthChain {
             yesVotes = 1;
         }
 
-        uint reward = divide(_votesCount, yesVotes);
-        uint rewardFromStash = multiply(reward, divide(REWARD_FROM_STASH_PERCENTAGE, 100));
+        uint reward = divide(_votesCount, yesVotes); uint rewardFromStash = multiply(reward, divide(REWARD_FROM_STASH_PERCENTAGE, 100));
 
         if(balances[OWNER_ADDRESS] >= rewardFromStash){
             totalBalance -= rewardFromStash;
@@ -178,10 +186,10 @@ contract TruthChain {
             balances[yesAddresses[i]] += reward;
         }
         votingSessions[_sessionId].distributed = true;
-   }
+    }
 
 
-     function multiply(uint256 a, uint256 b) private pure returns (uint256) {
+    function multiply(uint256 a, uint256 b) private pure returns (uint256) {
         return (a * b) / SCALE;
     }
 

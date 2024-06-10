@@ -96,9 +96,11 @@ contract TruthChainTest is Test {
         truthChain.voteOnBook(0, true);
         uint balance2 = truthChain.getBalance(voterAddress1);
         assertEq(balance2, 4000000000000000000);
+        vm.prank(ownerAddress);
         address[] memory addresses = truthChain.getAddressesVotedForSession(0);
         assertEq(addresses.length, 1);
 
+        vm.prank(ownerAddress);
         TruthChain.Vote[] memory votes = truthChain.getVotesForSession(0);
         uint votesCount = votes.length;
         assertEq(votesCount, 1);
@@ -117,9 +119,9 @@ contract TruthChainTest is Test {
         }
         assertEq(yesVotes, 1);
         assertEq(noVotes, 0); 
+        
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.stakedPool, 1);
- 
     }
 
 
@@ -142,6 +144,7 @@ contract TruthChainTest is Test {
         vm.expectRevert("You can only vote once per voting session!");
         truthChain.voteOnBook(0, true);
 
+        vm.prank(ownerAddress);
         TruthChain.Vote[] memory votes = truthChain.getVotesForSession(0);
         uint votesCount = votes.length;
 
@@ -159,6 +162,7 @@ contract TruthChainTest is Test {
 
         assertEq(yesVotes, 1);
         assertEq(noVotes, 0); 
+        vm.prank(ownerAddress);
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.stakedPool, 1);
         assertEq(votingSession.active, true);
@@ -217,6 +221,7 @@ contract TruthChainTest is Test {
         truthChain.endVotingSession(0);
         vm.prank(ownerAddress);
         truthChain.distributeCoins(0);
+        vm.prank(ownerAddress);
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.distributed, true);
         uint balance = truthChain.getBalance(voterAddress1);
