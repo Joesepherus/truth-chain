@@ -11,6 +11,7 @@ contract TruthChainTest is Test {
     address constant voterAddress3 = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC;
     address constant voterAddress4 = 0x90F79bf6EB2c4f870365E785982E1f101E93b906;
     address constant voterAddress5 = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
+    address constant voterAddress6 = 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc;
 
     function setUp() public {
         vm.prank(ownerAddress);
@@ -21,6 +22,7 @@ contract TruthChainTest is Test {
         vm.deal(voterAddress3, 100 ether);
         vm.deal(voterAddress4, 100 ether);
         vm.deal(voterAddress5, 100 ether);
+        vm.deal(voterAddress6, 100 ether);
 
         vm.prank(ownerAddress);
         truthChain.createBook(
@@ -80,7 +82,7 @@ contract TruthChainTest is Test {
     function test_CreateVotingSessionNotAsOwner() public {
         vm.prank(voterAddress1);
         vm.expectRevert("You need to be an owner for this operation.");
-        TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
+        truthChain.createVotingSession(0);
     }
 
     function test_VoteOnBook() public {
@@ -116,6 +118,15 @@ contract TruthChainTest is Test {
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.stakedPool, 1);
  
+    }
+
+
+    function test_VoteOnBookWithoutLockCoins() public {
+        uint balance = truthChain.getBalance(voterAddress1);
+        assertEq(balance, 10000000000000000000);
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to lock your coins first before voting.");
+        truthChain.voteOnBook(0, true);
     }
 
     function test_VoteOnBookTwice() public {
@@ -202,6 +213,7 @@ contract TruthChainTest is Test {
         truthChain.voteOnBook(0, false);
         vm.prank(ownerAddress);
         truthChain.endVotingSession(0);
+        vm.prank(ownerAddress);
         truthChain.distributeCoins(0);
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.distributed, true);
@@ -221,4 +233,36 @@ contract TruthChainTest is Test {
         uint balance5 = truthChain.getBalance(voterAddress5);
         assertEq(balance5, 4000000000000000000);
     }
+
+    
+    function test_distributeCoinsAsNotOwner() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to be an owner for this operation.");
+        truthChain.distributeCoins(0);
+    }
+
+    function test_lockCoinsMoreThanRequired() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to lock 5 ether exactly.");
+        truthChain.lockCoins(10000000000000000000);
+    }
+
+    function test_lockCoinsWhenAlreadyHaveLockedCoins() public {
+        vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress1);
+        vm.expectRevert("You already have locked coins.");
+        truthChain.lockCoins(5000000000000000000);
+    }
+
+    function test_lockCoinsWhenNotEnoughDeposited() public {
+        vm.prank(voterAddress6);
+        truthChain.deposit{value: 3 ether}();
+        vm.prank(voterAddress6);
+        vm.expectRevert("You need to deposit more coins.");
+        truthChain.lockCoins(5000000000000000000);
+    }
+
 }
+
+

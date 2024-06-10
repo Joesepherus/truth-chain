@@ -141,7 +141,7 @@ contract TruthChain {
         return votingSession;
    }
 
-   function distributeCoins(uint _sessionId) public {
+   function distributeCoins(uint _sessionId) public onlyOwner {
         VotingSession memory votingSession = votingSessions[_sessionId];
         require(votingSession.active == false , "Voting session is still active");
         require(votingSession.distributed == false, "Rewards have already been distributed.");
@@ -188,9 +188,9 @@ contract TruthChain {
     }
 
     function lockCoins(uint amount) public {
+        require(lockedBalances[msg.sender] < LOCK_NEEDED, "You already have locked coins.");
         require(balances[msg.sender] >= amount, "You need to deposit more coins.");
-        require(amount == LOCK_NEEDED, "You need to lock more coins.");
-        require(lockedBalances[msg.sender] <= LOCK_NEEDED, "You already have locked coins.");
+        require(amount == LOCK_NEEDED, "You need to lock 5 ether exactly.");
         lockedBalances[msg.sender] = amount;
         balances[msg.sender] -= amount;
     }
