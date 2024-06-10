@@ -46,6 +46,8 @@ contract TruthChain {
 
     address constant OWNER_ADDRESS = 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720;
 
+    uint256 constant SCALE = 1e18;
+
     constructor() {
         owner = msg.sender;
     }
@@ -178,9 +180,6 @@ contract TruthChain {
         votingSessions[_sessionId].distributed = true;
    }
 
-    uint256 constant DECIMALS = 18;
-    uint256 constant DECIMAL_FACTOR = 10 ** DECIMALS;
-    uint256 constant SCALE = 1e18;
 
      function multiply(uint256 a, uint256 b) public pure returns (uint256) {
         return (a * b) / SCALE;
