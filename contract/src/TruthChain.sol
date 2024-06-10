@@ -143,7 +143,7 @@ contract TruthChain {
 
    function distributeCoins(uint _sessionId) public onlyOwner {
         VotingSession memory votingSession = votingSessions[_sessionId];
-        require(votingSession.active == false , "Voting session is still active");
+        require(votingSession.active == false , "Voting session is still active.");
         require(votingSession.distributed == false, "Rewards have already been distributed.");
         TruthChain.Vote[] memory _votes = getVotesForSession(_sessionId);
              
@@ -157,6 +157,10 @@ contract TruthChain {
                 yesVotes++;
                 yesAddresses[i] = _votes[i].voter;
             }
+        }
+
+        if(yesVotes == 0) {
+            yesVotes = 1;
         }
 
         uint reward = divide(_votesCount, yesVotes);

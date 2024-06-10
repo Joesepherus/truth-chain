@@ -241,6 +241,30 @@ contract TruthChainTest is Test {
         truthChain.distributeCoins(0);
     }
 
+    function test_distributCoinsWhenVotingSessionIsActive() public {
+        vm.prank(ownerAddress);
+        vm.expectRevert("Voting session is still active.");
+        truthChain.distributeCoins(0);
+    }
+
+    function test_distributCoinsTwoTimes() public {
+        vm.prank(voterAddress1);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress1);
+        truthChain.voteOnBook(0, true);
+        vm.prank(voterAddress2);
+        truthChain.lockCoins(5000000000000000000);
+        vm.prank(voterAddress2);
+        truthChain.voteOnBook(0, true);
+        vm.prank(ownerAddress);
+        truthChain.endVotingSession(0);
+        vm.prank(ownerAddress);
+        truthChain.distributeCoins(0);
+        vm.prank(ownerAddress);
+        vm.expectRevert("Rewards have already been distributed.");
+        truthChain.distributeCoins(0);
+    }
+
     function test_lockCoinsMoreThanRequired() public {
         vm.prank(voterAddress1);
         vm.expectRevert("You need to lock 5 ether exactly.");
