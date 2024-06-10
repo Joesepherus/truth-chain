@@ -58,6 +58,15 @@ contract TruthChainTest is Test {
         assertEq(book.title, "book 2");
    }
 
+
+    function test_CreateBookNotAsOwner() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to be an owner for this operation.");
+        truthChain.createBook(
+            "book 3"
+        );
+   }
+
     function test_CreateVotingSession() public {
         vm.prank(ownerAddress);
         TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
@@ -66,6 +75,12 @@ contract TruthChainTest is Test {
         assertEq(votingSessionCount, 2);
         assertEq(votingSession.id, 1);
         assertEq(votingSession.active, true);
+    }
+
+    function test_CreateVotingSessionNotAsOwner() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to be an owner for this operation.");
+        TruthChain.VotingSession memory votingSession = truthChain.createVotingSession(0);
     }
 
     function test_VoteOnBook() public {
@@ -137,13 +152,21 @@ contract TruthChainTest is Test {
     }
 
     function test_endVotingSession() public {
+        vm.prank(ownerAddress);
         truthChain.endVotingSession(0);
 
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
         assertEq(votingSession.active, false);
     }
 
+    function test_endVotingSessionAsNotOwner() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("You need to be an owner for this operation.");
+        truthChain.endVotingSession(0);
+    }
+
     function test_endVotingSessionAndTryToVote() public {
+        vm.prank(ownerAddress);
         truthChain.endVotingSession(0);
 
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
@@ -177,6 +200,7 @@ contract TruthChainTest is Test {
         truthChain.lockCoins(5000000000000000000);
         vm.prank(voterAddress5);
         truthChain.voteOnBook(0, false);
+        vm.prank(ownerAddress);
         truthChain.endVotingSession(0);
         truthChain.distributeCoins(0);
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(0);
@@ -193,7 +217,7 @@ contract TruthChainTest is Test {
         //                10000000000000000000 + 1833333333333333332
         assertEq(balance, 5833333333333333332);
         uint balance2 = truthChain.getBalance(voterAddress2);
-        assertEq(balance, 5833333333333333332);
+        assertEq(balance2, 5833333333333333332);
         uint balance5 = truthChain.getBalance(voterAddress5);
         assertEq(balance5, 4000000000000000000);
     }

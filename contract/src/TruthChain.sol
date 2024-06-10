@@ -107,7 +107,7 @@ contract TruthChain {
        return balances[_addr];
    }
 
-   function endVotingSession(uint _sessionId) public {
+   function endVotingSession(uint _sessionId) public onlyOwner {
        votingSessions[_sessionId].active = false;
    }
 
