@@ -13,6 +13,8 @@ contract TruthChainTest is Test {
     address constant voterAddress5 = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65;
     address constant voterAddress6 = 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc;
 
+    uint constant sessionIdThatDoesntExist = 999;
+
     function setUp() public {
         vm.prank(ownerAddress);
         truthChain = new TruthChain();
@@ -286,6 +288,24 @@ contract TruthChainTest is Test {
         vm.expectRevert("You need to deposit more coins.");
         truthChain.lockCoins(5000000000000000000);
     }
+
+    function test_invalidDeposit() public {
+        vm.prank(voterAddress1);
+        vm.expectRevert("Invalid deposit.");
+        truthChain.deposit{value: 0}();
+    }
+
+    function test_getAddressesVotedForSessionWithWrongId() public {
+        address[] memory addresses = truthChain.getAddressesVotedForSession(sessionIdThatDoesntExist);
+        assertEq(addresses.length, 0);
+    }
+
+    function test_getVotesForSessionWithWrongId() public {
+        TruthChain.Vote[] memory votes = truthChain.getVotesForSession(sessionIdThatDoesntExist);
+        uint votesCount = votes.length;
+        assertEq(votesCount, 0);
+    }
+    
 
 }
 

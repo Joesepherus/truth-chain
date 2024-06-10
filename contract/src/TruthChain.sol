@@ -56,7 +56,7 @@ contract TruthChain {
     }
 
     function deposit() external payable {
-        require(msg.value != 0, "invalid deposit");
+        require(msg.value != 0, "Invalid deposit.");
 
         // Increment record
         totalBalance += msg.value;
