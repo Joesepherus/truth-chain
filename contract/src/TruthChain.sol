@@ -2,6 +2,7 @@
 pragma solidity >=0.8.13;
 
 contract TruthChain {
+    // STRUCTS
     struct Book {
         uint id;
         string title;
@@ -20,6 +21,20 @@ contract TruthChain {
         address voter;
     }
 
+    // EVENTS
+    event Deposit(address sender, uint amount);
+    event LockCoins(address sender, uint amount);
+    event BookCreated(uint bookId, string title);
+    event VotedOnBook(uint sessionId, address sender, bool decision);
+    event GetBalance(address addr, address sender, uint balance);
+    event EndVotingSession(uint sessionId, address sender);
+    event GetAddressesVotedForSession(uint sessionId, address sender, address[] voterAddresses);
+    event GetVotesForSession(uint sessionId, address sender, Vote[] voteForSession);
+    event GetVoteForSessionAndVoter(uint sessionId, address voterAddress, address sender, Vote vote);
+    event GetVotingSessionById(uint sessionId, address sender, VotingSession votingSession); 
+    event DistributeCoins(uint sessionId, address sender, Vote[] votes, uint yesVotes, address[] yesAddresses, uint votesCount, uint reward); 
+
+    // VARIABLES
     // voting_session_id => address => vote
     mapping(uint => mapping(address => Vote)) public votes;
     // voting_session_id => array of address 
@@ -63,6 +78,7 @@ contract TruthChain {
         // Increment record
         totalBalance += msg.value;
         balances[msg.sender] += msg.value;
+        emit Deposit(msg.sender, msg.value);
     }
 
     // creates a new book
@@ -71,8 +87,9 @@ contract TruthChain {
             bookCount,
             _title
         );
-        books[bookCount] = book;
+        emit BookCreated(bookCount, _title);
         bookCount++;
+        books[bookCount] = book;
         return book;
     }
 
@@ -103,30 +120,34 @@ contract TruthChain {
         voterAddresses[_sessionId].push(msg.sender);
         votingSessions[_sessionId].stakedPool += 1;
         balances[msg.sender] -= 1000000000000000000;
+        emit VotedOnBook(_sessionId, msg.sender, decision);
     }
 
-    function getBalance(address _addr) public view returns (uint) {
+    function getBalance(address _addr) public returns (uint) {
+        emit GetBalance(_addr, msg.sender, balances[_addr]);
         return balances[_addr];
     }
 
     function endVotingSession(uint _sessionId) public onlyOwner {
         votingSessions[_sessionId].active = false;
+        emit EndVotingSession(_sessionId, msg.sender);
     }
 
-    function checkIfVotingSessionIsActiveAndUserIsOwner(uint _sessionId) public view {
+    function checkIfVotingSessionIsActiveAndUserIsOwner(uint _sessionId) public {
         VotingSession memory votingSession = getVotingSessionById(_sessionId);
         if (votingSession.active == true) {
             require(msg.sender == owner, "You need to be owner to run this function when the session is active.");
         }
     }
         
-    function getAddressesVotedForSession(uint _sessionId) public view returns (address[] memory) {
+    function getAddressesVotedForSession(uint _sessionId) public returns (address[] memory) {
         checkIfVotingSessionIsActiveAndUserIsOwner(_sessionId);
         address[] memory _voterAddresses = voterAddresses[_sessionId];
+        emit GetAddressesVotedForSession(_sessionId, msg.sender, _voterAddresses);
         return _voterAddresses;
     }
 
-    function getVotesForSession(uint _sessionId) public view returns (Vote[] memory) {
+    function getVotesForSession(uint _sessionId) public returns (Vote[] memory) {
         checkIfVotingSessionIsActiveAndUserIsOwner(_sessionId);
         address[] memory _voterAddresses = voterAddresses[_sessionId];
 
@@ -138,17 +159,19 @@ contract TruthChain {
                 votesForSession[j] = foundVote;
                 j++;
             }
-
         }
+        emit GetVotesForSession(_sessionId, msg.sender, votesForSession);
         return votesForSession;
     }
 
-    function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) private view returns (Vote memory) {
+    function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) private returns (Vote memory) {
+        emit GetVoteForSessionAndVoter(_sessionId, _voterAddress, msg.sender, votes[_sessionId][_voterAddress]);
         return votes[_sessionId][_voterAddress];
     }
 
-    function getVotingSessionById(uint _sessionId) public view returns (VotingSession memory){
+    function getVotingSessionById(uint _sessionId) public returns (VotingSession memory){
         VotingSession memory votingSession = votingSessions[_sessionId];
+        emit GetVotingSessionById(_sessionId, msg.sender, votingSession);
         return votingSession;
     }
 
@@ -186,6 +209,7 @@ contract TruthChain {
             balances[yesAddresses[i]] += reward;
         }
         votingSessions[_sessionId].distributed = true;
+        emit DistributeCoins(_sessionId, msg.sender, _votes, yesVotes, yesAddresses, _votesCount, reward);
     }
 
 
@@ -204,5 +228,6 @@ contract TruthChain {
         require(amount == LOCK_NEEDED, "You need to lock 5 ether exactly.");
         lockedBalances[msg.sender] = amount;
         balances[msg.sender] -= amount;
+        emit LockCoins(msg.sender, amount);
     }
 }
