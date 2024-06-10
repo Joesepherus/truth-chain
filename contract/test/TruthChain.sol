@@ -306,12 +306,6 @@ contract TruthChainTest is Test {
         assertEq(votesCount, 0);
     }
 
-    
-    function test_getVoteForSessionAndVoterWithWrongIds() public {
-           TruthChain.Vote memory foundVote = truthChain.getVoteForSessionAndVoter(sessionIdThatDoesntExist, voterAddress1);
-           assertEq(foundVote.voter, address(0));
-    }
-
     function test_getVotingSessionById() public {
         TruthChain.VotingSession memory votingSession = truthChain.getVotingSessionById(sessionIdThatDoesntExist);
         assertEq(votingSession.stakedPool, 0);

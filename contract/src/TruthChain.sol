@@ -134,7 +134,7 @@ contract TruthChain {
        return votesForSession;
    }
 
-   function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) public view returns (Vote memory) {
+   function getVoteForSessionAndVoter(uint _sessionId, address _voterAddress) private view returns (Vote memory) {
        return votes[_sessionId][_voterAddress];
    }
 
@@ -181,11 +181,11 @@ contract TruthChain {
    }
 
 
-     function multiply(uint256 a, uint256 b) public pure returns (uint256) {
+     function multiply(uint256 a, uint256 b) private pure returns (uint256) {
         return (a * b) / SCALE;
     }
 
-    function divide(uint256 a, uint256 b) public pure returns (uint256) {
+    function divide(uint256 a, uint256 b) private pure returns (uint256) {
         require(b != 0, "Division by zero");
         return (a * SCALE) / b;
     }
